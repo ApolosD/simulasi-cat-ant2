@@ -6,6 +6,40 @@ import time
 
 st.set_page_config(page_title="Simulasi CAT UKP ANT II", layout="wide", page_icon="🚢")
 
+# --- SISTEM LOGIN SEDERHANA ---
+USER_CREDENTIALS = {
+    "admin": "ant2pass",
+    "kru1": "12345",
+    "taruna": "pip2026"
+}
+
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+if not st.session_state["logged_in"]:
+    st.title("🔐 Login Simulasi CAT ANT-II")
+    
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    
+    if st.button("Login"):
+        if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
+            st.session_state["logged_in"] = True
+            st.session_state["username"] = username
+            st.success(f"Selamat datang, {username}!")
+            st.rerun()
+        else:
+            st.error("Username atau Password salah!")
+            
+    st.stop()  # Menahan agar konten di bawahnya tidak muncul jika belum login
+
+# --- TOMBOL LOGOUT DI SIDEBAR ---
+with st.sidebar:
+    st.write(f"👤 Login sebagai: **{st.session_state.get('username', 'User')}**")
+    if st.button("Logout"):
+        st.session_state["logged_in"] = False
+        st.rerun()
+        
 st.title("🚢 SIMULASI CAT UKP ANT II")
 st.markdown("---")
 
