@@ -6,16 +6,16 @@ import time
 
 st.set_page_config(page_title="Simulasi CAT UKP ANT II", layout="wide", page_icon="🚢")
 
-# --- CUSTOM CSS: KONTRAS TINGGI AGAR TEKS SOAL & JAWABAN TERBACA JELAS ---
+# --- CUSTOM CSS: WARNA TOMBOL, TEKS JELAS, & PERBAIKAN STYLING ---
 st.markdown("""
     <style>
-    /* Background Utama Modern */
+    /* Background Utama */
     .stApp {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: #f8fafc;
     }
     
-    /* Memastikan Semua Teks Soal & Radio Button Terbaca Jelas (Putih/Terang) */
+    /* Memastikan Semua Teks Terbaca Jelas */
     div[data-testid="stMarkdownContainer"] p, 
     div[data-testid="stMarkdownContainer"] h1,
     div[data-testid="stMarkdownContainer"] h2,
@@ -23,17 +23,40 @@ st.markdown("""
     div[data-testid="stWidgetLabel"] p,
     div[role="radiogroup"] label p {
         color: #f8fafc !important;
-        font-size: 16px !important;
     }
 
-    /* Card Pilihan Jawaban */
+    /* FIX WARNA TOMBOL SIDEBAR & LOGOUT AGAR TIDAK BLANK / TRANSPARAN */
+    section[data-testid="stSidebar"] button {
+        background-color: #334155 !important;
+        color: #ffffff !important;
+        border: 1px solid #475569 !important;
+        font-weight: 600 !important;
+    }
+
+    section[data-testid="stSidebar"] button:hover {
+        background-color: #38bdf8 !important;
+        color: #0f172a !important;
+        border-color: #38bdf8 !important;
+    }
+
+    /* Tombol Utama (Primary) */
+    button[kind="primary"] {
+        background-color: #0284c7 !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+
+    button[kind="primary"]:hover {
+        background-color: #0369a1 !important;
+    }
+
+    /* Card Pilihan Jawaban Radio Button */
     div[role="radiogroup"] label {
         background-color: rgba(255, 255, 255, 0.08) !important;
         padding: 10px 15px !important;
         border-radius: 8px !important;
         margin-bottom: 8px !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        transition: all 0.2s ease-in-out;
     }
     
     div[role="radiogroup"] label:hover {
@@ -50,28 +73,25 @@ st.markdown("""
         padding: 35px;
         border: 1px solid rgba(255, 255, 255, 0.18);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        margin-top: 20px;
+        margin-top: 15px;
     }
     
-    /* Perbaikan Tombol Navigasi Soal di Sidebar */
+    /* Perbaikan Tombol Navigasi Soal 4 Kolom di Sidebar */
     div[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
-        gap: 3px !important;
+        gap: 4px !important;
     }
     div[data-testid="stSidebar"] button {
         padding: 2px 1px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        height: 34px !important;
-        min-height: 34px !important;
+        font-size: 12px !important;
+        height: 36px !important;
+        min-height: 36px !important;
         white-space: nowrap !important;
-        word-break: keep-all !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         border-radius: 6px !important;
     }
 
-    /* Penyesuaian Warna Teks Sidebar */
     section[data-testid="stSidebar"] {
         background-color: rgba(15, 23, 42, 0.95) !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -94,11 +114,13 @@ if not st.session_state["logged_in"]:
     
     with col_l2:
         st.markdown("<br>", unsafe_allow_html=True)
+        # 1. PERBESAR TULISAN JUDUL SIMULASI CAT UKP ANT II
+        # 2. MENGELIMINASI KOTAK KOSONG DI BAWAH JUDUL
         st.markdown("""
-            <div style='text-align: center;'>
-                <h1 style='font-size: 45px; margin-bottom: 0;'>🚢</h1>
-                <h2 style='margin-top: 5px; color: #ffffff;'>SIMULASI CAT UKP ANT II</h2>
-                <p style='color: #94a3b8;'>Sistem Ujian Keahlian Pelaut - Tingkat ANT II</p>
+            <div style='text-align: center; margin-bottom: 20px;'>
+                <h1 style='font-size: 60px; margin-bottom: 0;'>🚢</h1>
+                <h1 style='font-size: 38px; font-weight: 800; color: #ffffff; margin-top: 5px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;'>SIMULASI CAT UKP ANT II</h1>
+                <p style='color: #94a3b8; font-size: 16px; margin-top: 0;'>Sistem Ujian Keahlian Pelaut - Tingkat ANT II</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -119,23 +141,19 @@ if not st.session_state["logged_in"]:
                 st.error("Username atau Password salah!")
                 
         st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        with st.expander("ℹ️ Kredensial Login Default (Klik di sini)"):
-            st.write("• **Admin**: `admin` / `ant2pass`")
-            st.write("• **Kru**: `kru1` / `12345`")
-            st.write("• **Taruna**: `taruna` / `pip2026`")
+        # 3. KREDENSIAL LOGIN DEFAULT SUDAH DIHAPUS TOTAL DI SINI
             
     st.stop()  # Menahan agar konten di bawahnya tidak muncul jika belum login
 
 # --- TOMBOL LOGOUT DI SIDEBAR ---
 with st.sidebar:
     st.write(f"👤 Login sebagai: **{st.session_state.get('username', 'User')}**")
-    if st.button("Logout"):
+    if st.button("Logout", use_container_width=True):
         st.session_state["logged_in"] = False
         st.rerun()
-        
-st.title("🚢 SIMULASI CAT UKP ANT II")
+
+# JUDUL HALAMAN UTAMA SETELAH LOGIN
+st.markdown("<h1 style='font-size: 36px; font-weight: 800; color: #ffffff;'>🚢 SIMULASI CAT UKP ANT II</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --- LOAD DATA EXCEL MULTI-SHEET & STANDARISASI KOLOM ---
@@ -303,7 +321,7 @@ elif st.session_state.started and not st.session_state.finished:
     st.sidebar.markdown("---")
     st.sidebar.write(f"**Navigasi Soal ({total_questions} Soal)**")
     
-    # NAVIGASI GRID 4 KOLOM
+    # NAVIGASI GRID 4 KOLOM DENGAN PERBAIKAN WARNA TOMBOL
     cols = st.sidebar.columns(4)
     for i in range(total_questions):
         col = cols[i % 4]
@@ -335,7 +353,6 @@ elif st.session_state.started and not st.session_state.finished:
 
     st.write(f"### {row['Soal']}")
     
-    # Opsi Jawaban dengan format rapi
     options = {
         'A': f"A. {row.get('Opsi_A', '')}",
         'B': f"B. {row.get('Opsi_B', '')}",
