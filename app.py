@@ -102,11 +102,14 @@ def load_data():
     if 'Penjelasan' not in df_full.columns:
         df_full['Penjelasan'] = 'Belum ada penjelasan/dasar aturan khusus untuk soal ini.'
 
-    # Clean Kunci Jawaban (ambil huruf pertama)
-    df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].astype(str).str.strip().str.upper()
-    df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].apply(
-        lambda x: x[0] if len(x) > 0 and x[0] in ['A', 'B', 'C', 'D'] else x
-    )
+    # FIX PENANGANAN ERROR FLOAT: Aman membaca nilai null / NaN pada kunci jawaban
+    if 'Jawaban_Benar' in df_full.columns:
+        df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].fillna('').astype(str).str.strip().str.upper()
+        df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].apply(
+            lambda x: str(x)[0] if len(str(x)) > 0 and str(x)[0] in ['A', 'B', 'C', 'D'] else ''
+        )
+    else:
+        df_full['Jawaban_Benar'] = ''
 
     return df_full
 
