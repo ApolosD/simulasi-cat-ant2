@@ -6,6 +6,18 @@ import time
 
 st.set_page_config(page_title="Simulasi CAT UKP ANT II", layout="wide", page_icon="🚢")
 
+# --- CUSTOM CSS UNTUK MERAPIKAN NAVIGASI SIDEBAR ---
+st.markdown("""
+    <style>
+    /* Styling tombol navigasi nomor soal agar tidak terpotong */
+    div[data-testid="stSidebar"] button {
+        padding: 2px 0px !important;
+        font-size: 13px !important;
+        min-height: 38px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- SISTEM LOGIN SEDERHANA ---
 USER_CREDENTIALS = {
     "admin": "ant2pass",
@@ -102,7 +114,7 @@ def load_data():
     if 'Penjelasan' not in df_full.columns:
         df_full['Penjelasan'] = 'Belum ada penjelasan/dasar aturan khusus untuk soal ini.'
 
-    # FIX PENANGANAN ERROR FLOAT: Aman membaca nilai null / NaN pada kunci jawaban
+    # FIX AMAN: Mengubah sel kosong ke string sebelum membaca len()
     if 'Jawaban_Benar' in df_full.columns:
         df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].fillna('').astype(str).str.strip().str.upper()
         df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].apply(
@@ -139,30 +151,49 @@ if 'filtered_df' not in st.session_state:
 if not st.session_state.started:
     st.subheader("📋 Dashboard & Pengaturan Ujian")
     
-    # Filter Fungsi
-    list_fungsi = ["Semua Fungsi"] + sorted(list(df_raw['Fungsi'].dropna().unique()))
-    selected_fungsi = st.selectbox("🎯 Pilih Fungsi Ujian:", list_fungsi)
+    col_a, col_b = st.columns(2)
     
-    # Pengaturan Waktu
-    durasi_menit = st.number_input("⏱️ Set Durasi Waktu Ujian (Menit):", min_value=1, max_value=180, value=15)
-    
-    # Filter Data berdasarkan Pilihan
-    if selected_fungsi == "Semua Fungsi":
-        df_selected = df_raw.copy()
-    else:
-        df_selected = df_raw[df_raw['Fungsi'] == selected_fungsi].copy()
+    with col_a:
+        # Filter Fungsi
+        list_fungsi = ["Semua Fungsi"] + sorted(list(df_raw['Fungsi'].dropna().unique()))
+        selected_fungsi = st.selectbox("🎯 Pilih Fungsi Ujian:", list_fungsi)
         
-    st.info(f"Total Soal Tersedia untuk Kategori Ini: **{len(df_selected)} Soal**")
-    
+        # Filter Data awal berdasarkan Fungsi
+        if selected_fungsi == "Semua Fungsi":
+            df_pool = df_raw.copy()
+        else:
+            df_pool = df_raw[df_raw['Fungsi'] == selected_fungsi].copy()
+            
+        max_soal = len(df_pool)
+        st.info(f"Total Bank Soal Tersedia: **{max_soal} Soal**")
+
+    with col_b:
+        # Pengaturan Jumlah Soal
+        default_target = min(50, max_soal)
+        target_soal = st.number_input(
+            "🎲 Jumlah Soal yang Akan Diuji (Acak):", 
+            min_value=5, 
+            max_value=max_soal if max_soal > 5 else 5, 
+            value=default_target,
+            step=5,
+            help="Soal akan diambil secara acak dari bank soal sesuai jumlah yang dimasukkan."
+        )
+        
+        # Pengaturan Waktu
+        durasi_menit = st.number_input("⏱️ Set Durasi Waktu Ujian (Menit):", min_value=1, max_value=180, value=60)
+
+    st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
         st.write("**Petunjuk Ujian:**")
-        st.write("1. Timer akan otomatis berjalan mundur begitu Anda menekan tombol Mulai.")
-        st.write("2. Bebas berpindah nomor soal melalui sidebar navigasi.")
-        st.write("3. Apabila waktu habis, ujian akan otomatis dikirim.")
+        st.write("1. Soal akan **diacak otomatis** dari bank soal pilihan Anda.")
+        st.write("2. Timer akan otomatis berjalan mundur begitu Anda menekan tombol Mulai.")
+        st.write("3. Bebas berpindah nomor soal melalui sidebar navigasi.")
+        st.write("4. Apabila waktu habis, ujian akan otomatis dikirim.")
     
     if st.button("🚀 MULAI SIMULASI CAT", type="primary", use_container_width=True):
-        st.session_state.filtered_df = df_selected.reset_index(drop=True)
+        # ACAK SOAL SESUAI JUMLAH YANG DIPILIH
+        st.session_state.filtered_df = df_pool.sample(n=int(target_soal), random_state=random.randint(1, 10000)).reset_index(drop=True)
         st.session_state.started = True
         st.session_state.finished = False
         st.session_state.current_q = 0
@@ -198,15 +229,35 @@ elif st.session_state.started and not st.session_state.finished:
         st.sidebar.warning(f"⏳ Sisa Waktu: **{timer_text}**")
         
     st.sidebar.markdown("---")
+    st.sidebar.write(f"**Navigasi Soal ({total_questions} Soal)**")
     
-    # Grid Navigasi Nomor Soal
-    cols = st.sidebar.columns(5)
-    for i in range(total_questions):
-        col = cols[i % 5]
-        answered = i in st.session_state.user_answers
-        btn_label = f"✓ {i+1}" if answered else f"{i+1}"
-        if col.button(btn_label, key=f"nav_{i}", use_container_width=True):
-            st.session_state.current_q = i
+    # TAMPILAN NAVIGASI RAPI: 
+    # Jika soal <= 50, pakai Grid Tombol 5 kolom
+    if total_questions <= 50:
+        cols = st.sidebar.columns(5)
+        for i in range(total_questions):
+            col = cols[i % 5]
+            answered = i in st.session_state.user_answers
+            btn_label = f"✓{i+1}" if answered else f"{i+1}"
+            
+            # Highlight tombol nomor yang sedang dibuka
+            is_current = (i == st.session_state.current_q)
+            btn_type = "primary" if is_current else "secondary"
+            
+            if col.button(btn_label, key=f"nav_{i}", use_container_width=True, type=btn_type):
+                st.session_state.current_q = i
+                st.rerun()
+    else:
+        # Jika soal > 50, gunakan Selectbox agar sidebar tidak overflow
+        q_options = [f"Soal {i+1} {'(Sudah Diisi)' if i in st.session_state.user_answers else ''}" for i in range(total_questions)]
+        selected_nav = st.sidebar.selectbox(
+            "Pilih Nomor Soal:",
+            options=range(total_questions),
+            format_func=lambda x: q_options[x],
+            index=st.session_state.current_q
+        )
+        if selected_nav != st.session_state.current_q:
+            st.session_state.current_q = selected_nav
             st.rerun()
             
     st.sidebar.markdown("---")
