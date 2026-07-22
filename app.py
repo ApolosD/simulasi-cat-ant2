@@ -6,16 +6,16 @@ import time
 
 st.set_page_config(page_title="Simulasi CAT UKP ANT II", layout="wide", page_icon="🚢")
 
-# --- CUSTOM CSS: WARNA TOMBOL, TEKS JELAS, & PERBAIKAN STYLING ---
+# --- CUSTOM CSS DENGAN PENINGKATAN KONTRAS DAN PENAMBALAN TOMBOL BLANK ---
 st.markdown("""
     <style>
-    /* Background Utama */
+    /* Background Utama Modern */
     .stApp {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: #f8fafc;
     }
     
-    /* Memastikan Semua Teks Terbaca Jelas */
+    /* Teks Pembacaan Jelas */
     div[data-testid="stMarkdownContainer"] p, 
     div[data-testid="stMarkdownContainer"] h1,
     div[data-testid="stMarkdownContainer"] h2,
@@ -25,21 +25,23 @@ st.markdown("""
         color: #f8fafc !important;
     }
 
-    /* FIX WARNA TOMBOL SIDEBAR & LOGOUT AGAR TIDAK BLANK / TRANSPARAN */
-    section[data-testid="stSidebar"] button {
+    /* FIX TOMBOL UMUM & NAVIGASI BAWAH (SEBELUMNYA / SELANJUTNYA) */
+    div.stButton > button {
         background-color: #334155 !important;
         color: #ffffff !important;
-        border: 1px solid #475569 !important;
+        border: 1px solid #64748b !important;
         font-weight: 600 !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
     }
 
-    section[data-testid="stSidebar"] button:hover {
+    div.stButton > button:hover {
         background-color: #38bdf8 !important;
         color: #0f172a !important;
         border-color: #38bdf8 !important;
     }
 
-    /* Tombol Utama (Primary) */
+    /* Tombol Utama / Primary (Login, Mulai Ujian, Kirim Ujian) */
     button[kind="primary"] {
         background-color: #0284c7 !important;
         color: #ffffff !important;
@@ -64,19 +66,18 @@ st.markdown("""
         border-color: #38bdf8 !important;
     }
     
-    /* Card Login Glassmorphism */
-    .login-container {
+    /* Container Login Rapi Tanpa Kotak Kosong */
+    .login-box {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border-radius: 16px;
-        padding: 35px;
+        padding: 30px;
         border: 1px solid rgba(255, 255, 255, 0.18);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        margin-top: 15px;
     }
     
-    /* Perbaikan Tombol Navigasi Soal 4 Kolom di Sidebar */
+    /* Tombol Grid Nomor Soal di Sidebar */
     div[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
         gap: 4px !important;
     }
@@ -99,7 +100,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SISTEM LOGIN SEDERHANA ---
+# --- SISTEM LOGIN ---
 USER_CREDENTIALS = {
     "admin": "ant2pass",
     "kru1": "12345",
@@ -113,20 +114,16 @@ if not st.session_state["logged_in"]:
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
     
     with col_l2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        # 1. PERBESAR TULISAN JUDUL SIMULASI CAT UKP ANT II
-        # 2. MENGELIMINASI KOTAK KOSONG DI BAWAH JUDUL
+        # Tampilan Header Login Bersih
         st.markdown("""
-            <div style='text-align: center; margin-bottom: 20px;'>
-                <h1 style='font-size: 60px; margin-bottom: 0;'>🚢</h1>
-                <h1 style='font-size: 38px; font-weight: 800; color: #ffffff; margin-top: 5px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;'>SIMULASI CAT UKP ANT II</h1>
-                <p style='color: #94a3b8; font-size: 16px; margin-top: 0;'>Sistem Ujian Keahlian Pelaut - Tingkat ANT II</p>
+            <div style='text-align: center; padding-top: 20px; padding-bottom: 15px;'>
+                <h1 style='font-size: 55px; margin-bottom: 0;'>🚢</h1>
+                <h1 style='font-size: 36px; font-weight: 800; color: #ffffff; margin-top: 5px; margin-bottom: 5px; text-transform: uppercase;'>SIMULASI CAT UKP ANT II</h1>
+                <p style='color: #94a3b8; font-size: 15px; margin-top: 0;'>Sistem Ujian Keahlian Pelaut - Tingkat ANT II</p>
             </div>
         """, unsafe_allow_html=True)
         
-        st.markdown('<div class="login-container">', unsafe_allow_html=True)
-        st.subheader("🔐 Masuk ke Akun Anda")
-        
+        # Form Login tanpa container ganda/kotak kosong
         username = st.text_input("Username", placeholder="Masukkan username...")
         password = st.text_input("Password", type="password", placeholder="Masukkan password...")
         
@@ -139,9 +136,6 @@ if not st.session_state["logged_in"]:
                 st.rerun()
             else:
                 st.error("Username atau Password salah!")
-                
-        st.markdown('</div>', unsafe_allow_html=True)
-        # 3. KREDENSIAL LOGIN DEFAULT SUDAH DIHAPUS TOTAL DI SINI
             
     st.stop()  # Menahan agar konten di bawahnya tidak muncul jika belum login
 
@@ -152,11 +146,11 @@ with st.sidebar:
         st.session_state["logged_in"] = False
         st.rerun()
 
-# JUDUL HALAMAN UTAMA SETELAH LOGIN
-st.markdown("<h1 style='font-size: 36px; font-weight: 800; color: #ffffff;'>🚢 SIMULASI CAT UKP ANT II</h1>", unsafe_allow_html=True)
+# JUDUL HALAMAN UTAMA
+st.markdown("<h1 style='font-size: 34px; font-weight: 800; color: #ffffff;'>🚢 SIMULASI CAT UKP ANT II</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- LOAD DATA EXCEL MULTI-SHEET & STANDARISASI KOLOM ---
+# --- LOAD DATA EXCEL MULTI-SHEET & SUPPORT GAMBAR ---
 @st.cache_data
 def load_data():
     file_candidates = [
@@ -188,6 +182,7 @@ def load_data():
 
     df_full = pd.concat(all_sheets, ignore_index=True)
 
+    # Standardisasi nama kolom (Termasuk dukungan Gambar)
     rename_map = {
         'Function': 'Fungsi',
         'Competency': 'Competency',
@@ -198,7 +193,10 @@ def load_data():
         'Opsi D': 'Opsi_D',
         'Kunci Jawaban': 'Jawaban_Benar',
         'Kunci': 'Jawaban_Benar',
-        'Jawaban Benar': 'Jawaban_Benar'
+        'Jawaban Benar': 'Jawaban_Benar',
+        'Gambar': 'Gambar_Soal',
+        'Image': 'Gambar_Soal',
+        'URL_Gambar': 'Gambar_Soal'
     }
     df_full.rename(columns=rename_map, inplace=True)
 
@@ -210,6 +208,8 @@ def load_data():
         df_full['Competency'] = 'Umum'
     if 'Penjelasan' not in df_full.columns:
         df_full['Penjelasan'] = 'Belum ada penjelasan/dasar aturan khusus untuk soal ini.'
+    if 'Gambar_Soal' not in df_full.columns:
+        df_full['Gambar_Soal'] = None
 
     if 'Jawaban_Benar' in df_full.columns:
         df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].fillna('').astype(str).str.strip().str.upper()
@@ -239,7 +239,7 @@ if 'current_q' not in st.session_state:
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 if 'duration_seconds' not in st.session_state:
-    st.session_state.duration_seconds = 3600 # Default 60 menit
+    st.session_state.duration_seconds = 3600
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = df_raw.copy()
 
@@ -268,8 +268,7 @@ if not st.session_state.started:
             min_value=5, 
             max_value=max_soal if max_soal > 5 else 5, 
             value=default_target,
-            step=5,
-            help="Soal akan diambil secara acak dari bank soal sesuai jumlah yang dimasukkan."
+            step=5
         )
         
         durasi_menit = st.number_input("⏱️ Set Durasi Waktu Ujian (Menit):", min_value=1, max_value=180, value=60)
@@ -298,7 +297,6 @@ elif st.session_state.started and not st.session_state.finished:
     df = st.session_state.filtered_df
     total_questions = len(df)
     
-    # Hitung Sisa Waktu
     elapsed_time = time.time() - st.session_state.start_time
     remaining_time = st.session_state.duration_seconds - elapsed_time
     
@@ -310,7 +308,6 @@ elif st.session_state.started and not st.session_state.finished:
     mins, secs = divmod(int(remaining_time), 60)
     timer_text = f"{mins:02d}:{secs:02d}"
     
-    # Sidebar Navigasi Soal & Timer
     st.sidebar.title("⏱️ TIMER & NAVIGASI")
     
     if remaining_time < 180:
@@ -321,7 +318,6 @@ elif st.session_state.started and not st.session_state.finished:
     st.sidebar.markdown("---")
     st.sidebar.write(f"**Navigasi Soal ({total_questions} Soal)**")
     
-    # NAVIGASI GRID 4 KOLOM DENGAN PERBAIKAN WARNA TOMBOL
     cols = st.sidebar.columns(4)
     for i in range(total_questions):
         col = cols[i % 4]
@@ -353,6 +349,13 @@ elif st.session_state.started and not st.session_state.finished:
 
     st.write(f"### {row['Soal']}")
     
+    # DUKUNGAN MENAMPILKAN GAMBAR SOAL JIKA ADA DI EXCEL
+    img_val = row.get('Gambar_Soal', None)
+    if pd.notna(img_val) and str(img_val).strip() != "":
+        img_path = str(img_val).strip()
+        if os.path.exists(img_path) or img_path.startswith(('http://', 'https://')):
+            st.image(img_path, caption="Gambar Pendukung Soal", use_container_width=True)
+
     options = {
         'A': f"A. {row.get('Opsi_A', '')}",
         'B': f"B. {row.get('Opsi_B', '')}",
@@ -373,7 +376,9 @@ elif st.session_state.started and not st.session_state.finished:
     if selected_option:
         st.session_state.user_answers[q_idx] = selected_option
 
-    # Navigasi Bawah
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # TOMBOL NAVIGASI BAWAH (SEBELUMNYA / SELANJUTNYA) - WARNA SUDAH TEGAS & JELAS
     col_prev, col_next = st.columns([1, 1])
     with col_prev:
         if q_idx > 0:
@@ -425,6 +430,14 @@ elif st.session_state.finished:
         status_icon = "✅" if is_correct else "❌"
         with st.expander(f"{status_icon} Soal No. {i+1}: {str(row['Soal'])[:60]}..."):
             st.write(f"**Soal Lengkap:** {row['Soal']}")
+            
+            # Tampilkan Gambar jika ada
+            img_val = row.get('Gambar_Soal', None)
+            if pd.notna(img_val) and str(img_val).strip() != "":
+                img_path = str(img_val).strip()
+                if os.path.exists(img_path) or img_path.startswith(('http://', 'https://')):
+                    st.image(img_path, width=300)
+
             st.write(f"- A: {row.get('Opsi_A', '')}")
             st.write(f"- B: {row.get('Opsi_B', '')}")
             st.write(f"- C: {row.get('Opsi_C', '')}")
