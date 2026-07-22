@@ -43,14 +43,72 @@ with st.sidebar:
 st.title("🚢 SIMULASI CAT UKP ANT II")
 st.markdown("---")
 
-# Load Data Excel
+# --- LOAD DATA EXCEL MULTI-SHEET & STANDARISASI KOLOM ---
 @st.cache_data
 def load_data():
-    file_path = "bank_soal_updated.xlsx"
-    if not os.path.exists(file_path):
-        file_path = "bank_soal.xlsx"
-    df = pd.read_excel(file_path)
-    return df
+    file_candidates = [
+        "Bank_Soal_UKP_ANT_II.xlsx",
+        "bank_soal_updated.xlsx",
+        "bank_soal.xlsx"
+    ]
+    
+    file_path = None
+    for f in file_candidates:
+        if os.path.exists(f):
+            file_path = f
+            break
+            
+    if not file_path:
+        raise FileNotFoundError("Tidak ada file bank soal Excel yang ditemukan di direktori aplikasi.")
+
+    xls = pd.ExcelFile(file_path)
+    all_sheets = []
+
+    for sheet_name in xls.sheet_names:
+        df_sheet = pd.read_excel(xls, sheet_name=sheet_name)
+        df_sheet.columns = [str(c).strip() for c in df_sheet.columns]
+        
+        # Tambahkan identifikasi Fungsi dari nama Sheet jika belum ada
+        if 'Fungsi' not in df_sheet.columns and 'Function' not in df_sheet.columns:
+            df_sheet['Fungsi'] = sheet_name.strip()
+            
+        all_sheets.append(df_sheet)
+
+    df_full = pd.concat(all_sheets, ignore_index=True)
+
+    # Pemetaan/Standardisasi nama kolom
+    rename_map = {
+        'Function': 'Fungsi',
+        'Competency': 'Competency',
+        'Pertanyaan': 'Soal',
+        'Opsi A': 'Opsi_A',
+        'Opsi B': 'Opsi_B',
+        'Opsi C': 'Opsi_C',
+        'Opsi D': 'Opsi_D',
+        'Kunci Jawaban': 'Jawaban_Benar',
+        'Kunci': 'Jawaban_Benar',
+        'Jawaban Benar': 'Jawaban_Benar'
+    }
+    df_full.rename(columns=rename_map, inplace=True)
+
+    # Bersihkan baris kosong pada kolom Soal
+    df_full = df_full.dropna(subset=['Soal']).reset_index(drop=True)
+
+    # Normalisasi kolom yang mungkin kosong
+    if 'Fungsi' not in df_full.columns:
+        df_full['Fungsi'] = 'Umum'
+    if 'Competency' not in df_full.columns:
+        df_full['Competency'] = 'Umum'
+    if 'Penjelasan' not in df_full.columns:
+        df_full['Penjelasan'] = 'Belum ada penjelasan/dasar aturan khusus untuk soal ini.'
+
+    # Clean Kunci Jawaban (ambil huruf pertama)
+    df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].astype(str).str.strip().str.upper()
+    df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].apply(
+        lambda x: x[0] if len(x) > 0 and x[0] in ['A', 'B', 'C', 'D'] else x
+    )
+
+    return df_full
 
 try:
     df_raw = load_data()
@@ -161,17 +219,17 @@ elif st.session_state.started and not st.session_state.finished:
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.subheader(f"Soal No. {q_idx + 1} dari {total_questions}")
-        st.caption(f"Fungsi: {row['Fungsi']} | Sub-Topik: {row['Competency']}")
+        st.caption(f"Fungsi: {row.get('Fungsi', '-')} | Sub-Topik: {row.get('Competency', '-')}")
     with head_col2:
         st.metric(label="⏱️ Sisa Waktu", value=timer_text)
 
     st.write(f"### {row['Soal']}")
     
     options = {
-        'A': f"A. {row['Opsi_A']}",
-        'B': f"B. {row['Opsi_B']}",
-        'C': f"C. {row['Opsi_C']}",
-        'D': f"D. {row['Opsi_D']}"
+        'A': f"A. {row.get('Opsi_A', '')}",
+        'B': f"B. {row.get('Opsi_B', '')}",
+        'C': f"C. {row.get('Opsi_C', '')}",
+        'D': f"D. {row.get('Opsi_D', '')}"
     }
     
     current_answer = st.session_state.user_answers.get(q_idx, None)
@@ -211,11 +269,11 @@ elif st.session_state.finished:
     
     for i in range(total):
         user_ans = st.session_state.user_answers.get(i, None)
-        correct_ans = str(df.iloc[i]['Jawaban_Benar']).strip().upper()
+        correct_ans = str(df.iloc[i].get('Jawaban_Benar', '')).strip().upper()
         if user_ans == correct_ans:
             correct_count += 1
             
-    score_percentage = (correct_count / total) * 100
+    score_percentage = (correct_count / total) * 100 if total > 0 else 0
     
     # Ringkasan Nilai
     c1, c2, c3 = st.columns(3)
@@ -234,20 +292,20 @@ elif st.session_state.finished:
     for i in range(total):
         row = df.iloc[i]
         user_ans = st.session_state.user_answers.get(i, "Tidak Dijawab")
-        correct_ans = str(row['Jawaban_Benar']).strip().upper()
+        correct_ans = str(row.get('Jawaban_Benar', '')).strip().upper()
         is_correct = (user_ans == correct_ans)
         
         status_icon = "✅" if is_correct else "❌"
-        with st.expander(f"{status_icon} Soal No. {i+1}: {row['Soal'][:60]}..."):
+        with st.expander(f"{status_icon} Soal No. {i+1}: {str(row['Soal'])[:60]}..."):
             st.write(f"**Soal Lengkap:** {row['Soal']}")
-            st.write(f"- A: {row['Opsi_A']}")
-            st.write(f"- B: {row['Opsi_B']}")
-            st.write(f"- C: {row['Opsi_C']}")
-            st.write(f"- D: {row['Opsi_D']}")
+            st.write(f"- A: {row.get('Opsi_A', '')}")
+            st.write(f"- B: {row.get('Opsi_B', '')}")
+            st.write(f"- C: {row.get('Opsi_C', '')}")
+            st.write(f"- D: {row.get('Opsi_D', '')}")
             
             st.write(f"**Jawaban Anda:** `{user_ans}`")
             st.write(f"**Jawaban Benar:** `{correct_ans}`")
-            st.info(f"**Penjelasan / Dasar Aturan:**\n{row['Penjelasan']}")
+            st.info(f"**Penjelasan / Dasar Aturan:**\n{row.get('Penjelasan', 'Belum ada penjelasan.')}")
 
     if st.button("🔄 Kembali ke Menu Utama / Ulangi", type="primary"):
         st.session_state.started = False
