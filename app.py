@@ -6,14 +6,20 @@ import time
 
 st.set_page_config(page_title="Simulasi CAT UKP ANT II", layout="wide", page_icon="🚢")
 
-# --- CUSTOM CSS UNTUK MERAPIKAN NAVIGASI SIDEBAR ---
+# --- CUSTOM CSS UNTUK MERAPIKAN TOMBOL NAVIGASI DI SIDEBAR ---
 st.markdown("""
     <style>
-    /* Styling tombol navigasi nomor soal agar tidak terpotong */
+    /* Merapikan grid tombol navigasi di sidebar */
+    div[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
+        gap: 4px !important;
+    }
     div[data-testid="stSidebar"] button {
-        padding: 2px 0px !important;
-        font-size: 13px !important;
-        min-height: 38px !important;
+        padding: 0px !important;
+        font-size: 11px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        line-height: 32px !important;
+        border-radius: 4px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -169,7 +175,7 @@ if not st.session_state.started:
 
     with col_b:
         # Pengaturan Jumlah Soal
-        default_target = min(50, max_soal)
+        default_target = min(60, max_soal)
         target_soal = st.number_input(
             "🎲 Jumlah Soal yang Akan Diuji (Acak):", 
             min_value=5, 
@@ -187,8 +193,8 @@ if not st.session_state.started:
     with col1:
         st.write("**Petunjuk Ujian:**")
         st.write("1. Soal akan **diacak otomatis** dari bank soal pilihan Anda.")
-        st.write("2. Timer akan otomatis berjalan mundur begitu Anda menekan tombol Mulai.")
-        st.write("3. Bebas berpindah nomor soal melalui sidebar navigasi.")
+        st.write("2. Timer berjalan mundur secara langsung (*live*).")
+        st.write("3. Bebas berpindah nomor soal melalui grid tombol di sidebar.")
         st.write("4. Apabila waktu habis, ujian akan otomatis dikirim.")
     
     if st.button("🚀 MULAI SIMULASI CAT", type="primary", use_container_width=True):
@@ -231,33 +237,21 @@ elif st.session_state.started and not st.session_state.finished:
     st.sidebar.markdown("---")
     st.sidebar.write(f"**Navigasi Soal ({total_questions} Soal)**")
     
-    # TAMPILAN NAVIGASI RAPI: 
-    # Jika soal <= 50, pakai Grid Tombol 5 kolom
-    if total_questions <= 50:
-        cols = st.sidebar.columns(5)
-        for i in range(total_questions):
-            col = cols[i % 5]
-            answered = i in st.session_state.user_answers
-            btn_label = f"✓{i+1}" if answered else f"{i+1}"
-            
-            # Highlight tombol nomor yang sedang dibuka
-            is_current = (i == st.session_state.current_q)
-            btn_type = "primary" if is_current else "secondary"
-            
-            if col.button(btn_label, key=f"nav_{i}", use_container_width=True, type=btn_type):
-                st.session_state.current_q = i
-                st.rerun()
-    else:
-        # Jika soal > 50, gunakan Selectbox agar sidebar tidak overflow
-        q_options = [f"Soal {i+1} {'(Sudah Diisi)' if i in st.session_state.user_answers else ''}" for i in range(total_questions)]
-        selected_nav = st.sidebar.selectbox(
-            "Pilih Nomor Soal:",
-            options=range(total_questions),
-            format_func=lambda x: q_options[x],
-            index=st.session_state.current_q
-        )
-        if selected_nav != st.session_state.current_q:
-            st.session_state.current_q = selected_nav
+    # GRID TOMBOL SANGAT RAPI (5 Kolom dengan CSS khusus)
+    cols = st.sidebar.columns(5)
+    for i in range(total_questions):
+        col = cols[i % 5]
+        answered = i in st.session_state.user_answers
+        
+        # Penamaan Tombol: '✓1' jika sudah dijawab, '1' jika belum
+        btn_label = f"✓{i+1}" if answered else f"{i+1}"
+        
+        # Highlight tombol nomor yang sedang aktif
+        is_current = (i == st.session_state.current_q)
+        btn_type = "primary" if is_current else "secondary"
+        
+        if col.button(btn_label, key=f"nav_{i}", use_container_width=True, type=btn_type):
+            st.session_state.current_q = i
             st.rerun()
             
     st.sidebar.markdown("---")
@@ -311,6 +305,10 @@ elif st.session_state.started and not st.session_state.finished:
             if st.button("Soal Selanjutnya ➡️", use_container_width=True):
                 st.session_state.current_q += 1
                 st.rerun()
+
+    # --- AUTO-REFRESH SETIAP 1 DETIK UNTUK LIVE TIMER ---
+    time.sleep(1)
+    st.rerun()
 
 # Tampilan Hasil & Analisis
 elif st.session_state.finished:
