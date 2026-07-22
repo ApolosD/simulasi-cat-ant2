@@ -6,20 +6,49 @@ import time
 
 st.set_page_config(page_title="Simulasi CAT UKP ANT II", layout="wide", page_icon="🚢")
 
-# --- CUSTOM CSS UNTUK MERAPIKAN TOMBOL NAVIGASI DI SIDEBAR ---
+# --- CUSTOM CSS: TEMA MARITIME, CARD LOGIN, & GRID NAVIGASI PERSIPI ---
 st.markdown("""
     <style>
-    /* Merapikan grid tombol navigasi di sidebar */
+    /* Background Tema Deep Ocean Gradient */
+    .stApp {
+        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%);
+        color: #e0e1dd;
+    }
+    
+    /* Styling Card Login Glassmorphism */
+    .login-container {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 35px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        margin-top: 20px;
+    }
+    
+    /* Perbaikan Tombol Navigasi Soal di Sidebar */
     div[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] {
-        gap: 4px !important;
+        gap: 3px !important;
     }
     div[data-testid="stSidebar"] button {
-        padding: 0px !important;
+        padding: 2px 1px !important;
         font-size: 11px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        line-height: 32px !important;
-        border-radius: 4px !important;
+        font-weight: 600 !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        white-space: nowrap !important;
+        word-break: keep-all !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 6px !important;
+    }
+
+    /* Penyesuaian Warna Teks Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: rgba(13, 27, 42, 0.9) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -35,19 +64,42 @@ if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
 if not st.session_state["logged_in"]:
-    st.title("🔐 Login Simulasi CAT ANT-II")
+    # Tampilan Halaman Login Menarik (Centered Card)
+    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
     
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    
-    if st.button("Login"):
-        if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
-            st.session_state["logged_in"] = True
-            st.session_state["username"] = username
-            st.success(f"Selamat datang, {username}!")
-            st.rerun()
-        else:
-            st.error("Username atau Password salah!")
+    with col_l2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""
+            <div style='text-align: center;'>
+                <h1 style='font-size: 45px; margin-bottom: 0;'>🚢</h1>
+                <h2 style='margin-top: 5px; color: #ffffff;'>SIMULASI CAT UKP ANT II</h2>
+                <p style='color: #778da9;'>Sistem Ujian Keahlian Pelaut - Tingkat ANT II</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('<div class="login-container">', unsafe_allow_html=True)
+        st.subheader("🔐 Masuk ke Akun Anda")
+        
+        username = st.text_input("Username", placeholder="Masukkan username...")
+        password = st.text_input("Password", type="password", placeholder="Masukkan password...")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🚀 LOGIN UJIAN", type="primary", use_container_width=True):
+            if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = username
+                st.success(f"Selamat datang, {username}!")
+                st.rerun()
+            else:
+                st.error("Username atau Password salah!")
+                
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.expander("ℹ️ Kredensial Login Default (Klik di sini)"):
+            st.write("• **Admin**: `admin` / `ant2pass`")
+            st.write("• **Kru**: `kru1` / `12345`")
+            st.write("• **Taruna**: `taruna` / `pip2026`")
             
     st.stop()  # Menahan agar konten di bawahnya tidak muncul jika belum login
 
@@ -86,7 +138,6 @@ def load_data():
         df_sheet = pd.read_excel(xls, sheet_name=sheet_name)
         df_sheet.columns = [str(c).strip() for c in df_sheet.columns]
         
-        # Tambahkan identifikasi Fungsi dari nama Sheet jika belum ada
         if 'Fungsi' not in df_sheet.columns and 'Function' not in df_sheet.columns:
             df_sheet['Fungsi'] = sheet_name.strip()
             
@@ -94,7 +145,7 @@ def load_data():
 
     df_full = pd.concat(all_sheets, ignore_index=True)
 
-    # Pemetaan/Standardisasi nama kolom
+    # Standardisasi nama kolom
     rename_map = {
         'Function': 'Fungsi',
         'Competency': 'Competency',
@@ -109,10 +160,8 @@ def load_data():
     }
     df_full.rename(columns=rename_map, inplace=True)
 
-    # Bersihkan baris kosong pada kolom Soal
     df_full = df_full.dropna(subset=['Soal']).reset_index(drop=True)
 
-    # Normalisasi kolom yang mungkin kosong
     if 'Fungsi' not in df_full.columns:
         df_full['Fungsi'] = 'Umum'
     if 'Competency' not in df_full.columns:
@@ -120,7 +169,6 @@ def load_data():
     if 'Penjelasan' not in df_full.columns:
         df_full['Penjelasan'] = 'Belum ada penjelasan/dasar aturan khusus untuk soal ini.'
 
-    # FIX AMAN: Mengubah sel kosong ke string sebelum membaca len()
     if 'Jawaban_Benar' in df_full.columns:
         df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].fillna('').astype(str).str.strip().str.upper()
         df_full['Jawaban_Benar'] = df_full['Jawaban_Benar'].apply(
@@ -149,22 +197,20 @@ if 'current_q' not in st.session_state:
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 if 'duration_seconds' not in st.session_state:
-    st.session_state.duration_seconds = 600 # Default 10 menit
+    st.session_state.duration_seconds = 3600 # Default 60 menit
 if 'filtered_df' not in st.session_state:
     st.session_state.filtered_df = df_raw.copy()
 
-# Tampilan Menu Awal
+# Tampilan Menu Awal / Dashboard Ujian
 if not st.session_state.started:
     st.subheader("📋 Dashboard & Pengaturan Ujian")
     
     col_a, col_b = st.columns(2)
     
     with col_a:
-        # Filter Fungsi
         list_fungsi = ["Semua Fungsi"] + sorted(list(df_raw['Fungsi'].dropna().unique()))
         selected_fungsi = st.selectbox("🎯 Pilih Fungsi Ujian:", list_fungsi)
         
-        # Filter Data awal berdasarkan Fungsi
         if selected_fungsi == "Semua Fungsi":
             df_pool = df_raw.copy()
         else:
@@ -174,7 +220,6 @@ if not st.session_state.started:
         st.info(f"Total Bank Soal Tersedia: **{max_soal} Soal**")
 
     with col_b:
-        # Pengaturan Jumlah Soal
         default_target = min(60, max_soal)
         target_soal = st.number_input(
             "🎲 Jumlah Soal yang Akan Diuji (Acak):", 
@@ -185,7 +230,6 @@ if not st.session_state.started:
             help="Soal akan diambil secara acak dari bank soal sesuai jumlah yang dimasukkan."
         )
         
-        # Pengaturan Waktu
         durasi_menit = st.number_input("⏱️ Set Durasi Waktu Ujian (Menit):", min_value=1, max_value=180, value=60)
 
     st.markdown("---")
@@ -198,7 +242,6 @@ if not st.session_state.started:
         st.write("4. Apabila waktu habis, ujian akan otomatis dikirim.")
     
     if st.button("🚀 MULAI SIMULASI CAT", type="primary", use_container_width=True):
-        # ACAK SOAL SESUAI JUMLAH YANG DIPILIH
         st.session_state.filtered_df = df_pool.sample(n=int(target_soal), random_state=random.randint(1, 10000)).reset_index(drop=True)
         st.session_state.started = True
         st.session_state.finished = False
@@ -228,8 +271,7 @@ elif st.session_state.started and not st.session_state.finished:
     # Sidebar Navigasi Soal & Timer
     st.sidebar.title("⏱️ TIMER & NAVIGASI")
     
-    # Widget Waktu di Sidebar
-    if remaining_time < 180: # Merah jika kurang dari 3 menit
+    if remaining_time < 180:
         st.sidebar.error(f"⏳ Sisa Waktu: **{timer_text}**")
     else:
         st.sidebar.warning(f"⏳ Sisa Waktu: **{timer_text}**")
@@ -237,16 +279,13 @@ elif st.session_state.started and not st.session_state.finished:
     st.sidebar.markdown("---")
     st.sidebar.write(f"**Navigasi Soal ({total_questions} Soal)**")
     
-    # GRID TOMBOL SANGAT RAPI (5 Kolom dengan CSS khusus)
-    cols = st.sidebar.columns(5)
+    # NAVIGASI GRID 4 KOLOM (Aman dari terpotongnya angka 10+)
+    cols = st.sidebar.columns(4)
     for i in range(total_questions):
-        col = cols[i % 5]
+        col = cols[i % 4]
         answered = i in st.session_state.user_answers
         
-        # Penamaan Tombol: '✓1' jika sudah dijawab, '1' jika belum
         btn_label = f"✓{i+1}" if answered else f"{i+1}"
-        
-        # Highlight tombol nomor yang sedang aktif
         is_current = (i == st.session_state.current_q)
         btn_type = "primary" if is_current else "secondary"
         
@@ -263,7 +302,6 @@ elif st.session_state.started and not st.session_state.finished:
     q_idx = st.session_state.current_q
     row = df.iloc[q_idx]
     
-    # Header Soal + Live Timer di kanan
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.subheader(f"Soal No. {q_idx + 1} dari {total_questions}")
@@ -306,7 +344,7 @@ elif st.session_state.started and not st.session_state.finished:
                 st.session_state.current_q += 1
                 st.rerun()
 
-    # --- AUTO-REFRESH SETIAP 1 DETIK UNTUK LIVE TIMER ---
+    # Auto-refresh live timer
     time.sleep(1)
     st.rerun()
 
@@ -327,7 +365,6 @@ elif st.session_state.finished:
             
     score_percentage = (correct_count / total) * 100 if total > 0 else 0
     
-    # Ringkasan Nilai
     c1, c2, c3 = st.columns(3)
     c1.metric("Total Soal", f"{total}")
     c2.metric("Jawaban Benar", f"{correct_count}")
