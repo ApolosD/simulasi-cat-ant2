@@ -6,16 +6,42 @@ import time
 
 st.set_page_config(page_title="Simulasi CAT UKP ANT II", layout="wide", page_icon="🚢")
 
-# --- CUSTOM CSS: TEMA MARITIME, CARD LOGIN, & GRID NAVIGASI PERSIPI ---
+# --- CUSTOM CSS: KONTRAS TINGGI AGAR TEKS SOAL & JAWABAN TERBACA JELAS ---
 st.markdown("""
     <style>
-    /* Background Tema Deep Ocean Gradient */
+    /* Background Utama Modern */
     .stApp {
-        background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #415a77 100%);
-        color: #e0e1dd;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #f8fafc;
     }
     
-    /* Styling Card Login Glassmorphism */
+    /* Memastikan Semua Teks Soal & Radio Button Terbaca Jelas (Putih/Terang) */
+    div[data-testid="stMarkdownContainer"] p, 
+    div[data-testid="stMarkdownContainer"] h1,
+    div[data-testid="stMarkdownContainer"] h2,
+    div[data-testid="stMarkdownContainer"] h3,
+    div[data-testid="stWidgetLabel"] p,
+    div[role="radiogroup"] label p {
+        color: #f8fafc !important;
+        font-size: 16px !important;
+    }
+
+    /* Card Pilihan Jawaban */
+    div[role="radiogroup"] label {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        padding: 10px 15px !important;
+        border-radius: 8px !important;
+        margin-bottom: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    div[role="radiogroup"] label:hover {
+        background-color: rgba(255, 255, 255, 0.18) !important;
+        border-color: #38bdf8 !important;
+    }
+    
+    /* Card Login Glassmorphism */
     .login-container {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(12px);
@@ -47,7 +73,7 @@ st.markdown("""
 
     /* Penyesuaian Warna Teks Sidebar */
     section[data-testid="stSidebar"] {
-        background-color: rgba(13, 27, 42, 0.9) !important;
+        background-color: rgba(15, 23, 42, 0.95) !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
     </style>
@@ -64,7 +90,6 @@ if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
 if not st.session_state["logged_in"]:
-    # Tampilan Halaman Login Menarik (Centered Card)
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
     
     with col_l2:
@@ -73,7 +98,7 @@ if not st.session_state["logged_in"]:
             <div style='text-align: center;'>
                 <h1 style='font-size: 45px; margin-bottom: 0;'>🚢</h1>
                 <h2 style='margin-top: 5px; color: #ffffff;'>SIMULASI CAT UKP ANT II</h2>
-                <p style='color: #778da9;'>Sistem Ujian Keahlian Pelaut - Tingkat ANT II</p>
+                <p style='color: #94a3b8;'>Sistem Ujian Keahlian Pelaut - Tingkat ANT II</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -145,7 +170,6 @@ def load_data():
 
     df_full = pd.concat(all_sheets, ignore_index=True)
 
-    # Standardisasi nama kolom
     rename_map = {
         'Function': 'Fungsi',
         'Competency': 'Competency',
@@ -237,8 +261,8 @@ if not st.session_state.started:
     with col1:
         st.write("**Petunjuk Ujian:**")
         st.write("1. Soal akan **diacak otomatis** dari bank soal pilihan Anda.")
-        st.write("2. Timer berjalan mundur secara langsung (*live*).")
-        st.write("3. Bebas berpindah nomor soal melalui grid tombol di sidebar.")
+        st.write("2. Bebas berpindah nomor soal melalui grid tombol di sidebar.")
+        st.write("3. Jawaban tersimpan otomatis saat Anda memilih opsi.")
         st.write("4. Apabila waktu habis, ujian akan otomatis dikirim.")
     
     if st.button("🚀 MULAI SIMULASI CAT", type="primary", use_container_width=True):
@@ -279,7 +303,7 @@ elif st.session_state.started and not st.session_state.finished:
     st.sidebar.markdown("---")
     st.sidebar.write(f"**Navigasi Soal ({total_questions} Soal)**")
     
-    # NAVIGASI GRID 4 KOLOM (Aman dari terpotongnya angka 10+)
+    # NAVIGASI GRID 4 KOLOM
     cols = st.sidebar.columns(4)
     for i in range(total_questions):
         col = cols[i % 4]
@@ -311,6 +335,7 @@ elif st.session_state.started and not st.session_state.finished:
 
     st.write(f"### {row['Soal']}")
     
+    # Opsi Jawaban dengan format rapi
     options = {
         'A': f"A. {row.get('Opsi_A', '')}",
         'B': f"B. {row.get('Opsi_B', '')}",
@@ -343,10 +368,6 @@ elif st.session_state.started and not st.session_state.finished:
             if st.button("Soal Selanjutnya ➡️", use_container_width=True):
                 st.session_state.current_q += 1
                 st.rerun()
-
-    # Auto-refresh live timer
-    time.sleep(1)
-    st.rerun()
 
 # Tampilan Hasil & Analisis
 elif st.session_state.finished:
